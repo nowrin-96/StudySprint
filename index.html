@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Study Sprint — Smart Student Productivity Web Application. Manage deadlines, subjects, study goals, Pomodoro focus sessions, and daily habits in one secure student dashboard.">
+  <title>Study Sprint — Smart Student Productivity</title>
+  
+  <!-- Favicon SVG -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237C6BB3'/%3E%3Cpath d='M9 16l5 5 9-9' stroke='%23FAF9F5' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Toast Notification Center -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- ========================================================================
+       1. AUTHENTICATION VIEW (Default for Unauthenticated Visitors)
+       ======================================================================== -->
+  <div id="authScreen" class="auth-wrapper">
+    <div class="auth-container">
+      <div class="auth-header">
+        <div class="brand-badge">
+          <div class="brand-badge-icon">SS</div>
+          <span class="brand-badge-name">Study Sprint</span>
+        </div>
+        <h1 class="auth-title">Welcome Student</h1>
+        <p class="auth-tagline">Plan your day. Focus on your goals. Never miss a deadline.</p>
+      </div>
+
+      <!-- Config Notice (Informs the student if in preview vs live Firebase mode) -->
+      <div id="authSetupNotice" class="setup-notice hidden">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div>
+          <strong>Phase B Preview Mode</strong><br>
+          Firebase keys not yet set. You can preview the UI with demo mode or continue to Phase C to connect live Firebase.
+        </div>
+      </div>
+
+      <!-- Error / Alert Message Box -->
+      <div id="authAlert" class="auth-alert hidden" role="alert"></div>
+
+      <!-- Auth Navigation Tabs -->
+      <div class="auth-tabs" id="authTabs">
+        <button type="button" class="auth-tab-btn active" id="tabSignIn">Sign In</button>
+        <button type="button" class="auth-tab-btn" id="tabRegister">Create Account</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form id="formLogin" class="auth-form">
+        <div class="form-group">
+          <label class="form-label" for="loginEmail">Student Email</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" id="loginEmail" class="form-input" placeholder="student@college.edu" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="loginPassword">Password</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="password-toggle-btn" id="toggleLoginPassword" aria-label="Toggle password visibility">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-options">
+          <a href="#" id="linkForgotPassword">Forgot password?</a>
+        </div>
+
+        <button type="submit" id="btnLoginSubmit" class="btn btn-primary btn-lg">
+          <span class="btn-text">Sign In to Study Sprint</span>
+        </button>
+      </form>
+
+      <!-- REGISTRATION FORM -->
+      <form id="formRegister" class="auth-form hidden">
+        <div class="form-group">
+          <label class="form-label" for="regName">Student Full Name</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="regName" class="form-input" placeholder="e.g. Alex Morgan" required autocomplete="name">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regEmail">College / Personal Email</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" id="regEmail" class="form-input" placeholder="student@college.edu" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regPassword">Create Password</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="regPassword" class="form-input" placeholder="At least 6 characters" required autocomplete="new-password">
+            <button type="button" class="password-toggle-btn" id="toggleRegPassword" aria-label="Toggle password visibility">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <span class="form-hint">Must be at least 6 characters long</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regPasswordConfirm">Confirm Password</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <input type="password" id="regPasswordConfirm" class="form-input" placeholder="Re-enter password" required autocomplete="new-password">
+          </div>
+        </div>
+
+        <button type="submit" id="btnRegisterSubmit" class="btn btn-primary btn-lg">
+          <span class="btn-text">Create Account</span>
+        </button>
+      </form>
+
+      <!-- FORGOT PASSWORD FORM -->
+      <form id="formForgot" class="auth-form hidden">
+        <p style="font-size: 0.88rem; margin-bottom: 16px; color: var(--text-secondary);">
+          Enter your registered email address. Firebase will send a secure password reset link to your inbox.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label" for="forgotEmail">Student Email</label>
+          <div class="input-with-icon">
+            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" id="forgotEmail" class="form-input" placeholder="student@college.edu" required autocomplete="email">
+          </div>
+        </div>
+
+        <button type="submit" id="btnForgotSubmit" class="btn btn-primary btn-lg">
+          <span class="btn-text">Send Password Reset Link</span>
+        </button>
+
+        <div style="margin-top: 16px; text-align: center;">
+          <a href="#" id="linkBackToLogin" style="font-size: 0.88rem;">← Back to Sign In</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       2. AUTHENTICATED APP SCREEN (Protected Dashboard & Tools)
+       ======================================================================== -->
+  <div id="appScreen" class="app-wrapper hidden">
+    <!-- Backdrop for Mobile Sidebar -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-header">
+        <div class="brand-wrapper">
+          <div class="brand-logo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="brand-info">
+            <h2>Study Sprint</h2>
+            <span>Student Hub</span>
+          </div>
+        </div>
+        <button type="button" class="btn-icon mobile-menu-btn" id="btnCloseSidebar" aria-label="Close menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-item active" data-view="dashboard" id="navDashboard">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="#reminders" class="nav-item" data-view="reminders" id="navReminders">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Reminders</span>
+          <span class="nav-badge hidden" id="badgePendingDeadlines">0</span>
+        </a>
+
+        <a href="#planner" class="nav-item" data-view="planner" id="navPlanner">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>Study Planner</span>
+        </a>
+
+        <a href="#pomodoro" class="nav-item" data-view="pomodoro" id="navPomodoro">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="3" x2="12" y2="7"/><line x1="12" y1="12" x2="16" y2="12"/></svg>
+          <span>Pomodoro Timer</span>
+        </a>
+
+        <a href="#habits" class="nav-item" data-view="habits" id="navHabits">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>Daily Habits</span>
+        </a>
+
+        <a href="#progress" class="nav-item" data-view="progress" id="navProgress">
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Progress</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile-card">
+          <div class="user-avatar" id="userAvatarInitial">S</div>
+          <div class="user-meta">
+            <div class="user-name" id="userDisplayName">Student Name</div>
+            <div class="user-email" id="userEmailDisplay">student@college.edu</div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-logout" id="btnLogout" aria-label="Sign out">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN APP AREA -->
+    <main class="app-main">
+      <!-- TOP HEADER BAR -->
+      <header class="app-header">
+        <div class="header-left">
+          <button type="button" class="btn-icon mobile-menu-btn" id="btnOpenSidebar" aria-label="Open menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="header-greeting">
+            <h1 id="headerGreetingText">Welcome back!</h1>
+            <div class="header-date" id="currentDateDisplay">Today</div>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="btnNotificationPrompt" title="Toggle browser deadline reminders">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span>Alerts</span>
+          </button>
+
+          <button type="button" class="btn btn-primary btn-sm" id="btnQuickAddReminder">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>+ Reminder</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- CONTENT SECTIONS -->
+      <div class="app-content">
+        <!-- ==================================================================
+             VIEW 1: DASHBOARD OVERVIEW
+             ================================================================== -->
+        <section id="viewDashboard" class="view-section active">
+          <!-- KPI Summary Metrics -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon-wrap kpi-icon-purple">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Pending Deadlines</span>
+                <span class="kpi-value" id="kpiPendingCount">0</span>
+                <span class="kpi-subtext" id="kpiOverdueSubtext">0 overdue</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon-wrap kpi-icon-blue">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Today's Study Tasks</span>
+                <span class="kpi-value" id="kpiTasksCount">0</span>
+                <span class="kpi-subtext" id="kpiTasksSubtext">0 completed</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon-wrap kpi-icon-amber">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="3" x2="12" y2="7"/><line x1="12" y1="12" x2="16" y2="12"/></svg>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Study Focus</span>
+                <span class="kpi-value" id="kpiStudyTime">0m</span>
+                <span class="kpi-subtext" id="kpiSessionsCount">0 focus sessions</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon-wrap kpi-icon-green">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Daily Habits</span>
+                <span class="kpi-value" id="kpiHabitsPercent">0%</span>
+                <span class="kpi-subtext" id="kpiHabitStreak">0 day best streak</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Two-column Dashboard Grid -->
+          <div class="dashboard-grid">
+            <!-- Left: Upcoming Deadlines & Priority Tasks -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Upcoming Deadlines
+                  </h3>
+                  <button type="button" class="btn btn-outline btn-sm" id="btnGoToReminders">View All</button>
+                </div>
+
+                <div id="dashboardRemindersList" class="item-list">
+                  <!-- Injected dynamically -->
+                  <div class="empty-state">
+                    <div class="empty-state-icon">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="empty-state-title">No deadlines yet</div>
+                    <p class="empty-state-desc">You have no upcoming deadlines. Click below to add an assignment or fee reminder.</p>
+                    <button type="button" class="btn btn-primary btn-sm" id="btnEmptyAddReminder">+ Add First Reminder</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Study Tasks Preview -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    Today's Study Plan
+                  </h3>
+                  <button type="button" class="btn btn-outline btn-sm" id="btnGoToPlanner">Manage Tasks</button>
+                </div>
+                <div id="dashboardTasksList" class="item-list">
+                  <!-- Injected dynamically -->
+                  <div class="empty-state">
+                    <div class="empty-state-icon">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    </div>
+                    <div class="empty-state-title">No study tasks yet</div>
+                    <p class="empty-state-desc">Plan your revision, homework, or exam preparation.</p>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnEmptyAddTask">+ Add Study Task</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Mini Pomodoro & Habits -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+              <!-- Mini Pomodoro Widget -->
+              <div class="card" style="text-align: center;">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Quick Focus Timer
+                  </h3>
+                  <span class="badge badge-upcoming" id="miniPomoModeBadge">Focus • 25m</span>
+                </div>
+                <div style="padding: 10px 0 18px 0;">
+                  <div style="font-size: 3rem; font-weight: 700; font-family: 'Outfit', sans-serif; color: var(--primary);" id="miniPomoDigits">
+                    25:00
+                  </div>
+                  <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+                    Boost your retention with 25-minute sprints.
+                  </p>
+                  <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button type="button" class="btn btn-primary" id="btnMiniPomoToggle">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                      <span id="miniPomoBtnText">Start Focus</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="btnMiniPomoFullView">
+                      Full Timer →
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Today's Habits Checklist -->
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Daily Habits
+                  </h3>
+                  <button type="button" class="btn btn-outline btn-sm" id="btnGoToHabits">Manage</button>
+                </div>
+                <div id="dashboardHabitsList" class="item-list">
+                  <!-- Injected dynamically -->
+                  <div class="empty-state">
+                    <div class="empty-state-title">No daily habits</div>
+                    <p class="empty-state-desc">No daily habits yet. Create habits to track your daily progress.</p>
+                    <button type="button" class="btn btn-secondary btn-sm" id="btnEmptyAddHabit">+ Add Daily Habit</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 2: REMINDERS & DEADLINES
+             ================================================================== -->
+        <section id="viewReminders" class="view-section">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <h2>Reminders & Deadlines</h2>
+              <p>Keep track of college fees, assignments, examinations, and personal goals.</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="btnOpenAddReminderModal">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>+ Add Reminder</span>
+            </button>
+          </div>
+
+          <!-- Filter & Search Toolbar -->
+          <div class="filter-toolbar">
+            <div class="search-input-wrap">
+              <div class="input-with-icon">
+                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="remindersSearch" class="form-input" placeholder="Search title or details...">
+              </div>
+            </div>
+
+            <!-- Categories: College Fees, Assignments, Examinations, Personal Tasks, Other -->
+            <select id="filterCategory" class="filter-select">
+              <option value="all">All Categories</option>
+              <option value="College Fees">College Fees</option>
+              <option value="Assignments">Assignments</option>
+              <option value="Examinations">Examinations</option>
+              <option value="Personal Tasks">Personal Tasks</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <select id="filterStatus" class="filter-select">
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+              <option value="overdue">Overdue</option>
+            </select>
+
+            <select id="sortReminders" class="filter-select">
+              <option value="deadlineAsc">Deadline (Soonest First)</option>
+              <option value="deadlineDesc">Deadline (Latest First)</option>
+              <option value="priorityDesc">Priority (High to Low)</option>
+            </select>
+          </div>
+
+          <!-- Reminders List -->
+          <div id="remindersListContainer" class="item-list">
+            <!-- Rendered dynamically -->
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 3: STUDY PLANNER & SUBJECTS
+             ================================================================== -->
+        <section id="viewPlanner" class="view-section">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <h2>Study Planner</h2>
+              <p>Organize academic subjects, daily study goals, and revision milestones.</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="btn btn-secondary" id="btnOpenAddSubjectModal">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                <span>+ Subject</span>
+              </button>
+              <button type="button" class="btn btn-primary" id="btnOpenAddTaskModal">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>+ Study Task</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Subjects Tag Bar -->
+          <div class="card" style="margin-bottom: 24px; padding: 16px 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+              <span style="font-weight: 600; font-size: 0.88rem; color: var(--text-secondary);">Your Subjects</span>
+            </div>
+            <div id="subjectsChipList" style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <!-- Dynamic chips -->
+            </div>
+          </div>
+
+          <!-- Study Planner Tasks -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Study Tasks</h3>
+              <div style="display: flex; gap: 10px;">
+                <select id="filterTaskSubject" class="form-select" style="padding: 6px 12px; font-size: 0.84rem;">
+                  <option value="all">All Subjects</option>
+                </select>
+                <select id="filterTaskStatus" class="form-select" style="padding: 6px 12px; font-size: 0.84rem;">
+                  <option value="all">All Tasks</option>
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+            </div>
+            <div id="plannerTasksList" class="item-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 4: POMODORO FOCUS TIMER
+             ================================================================== -->
+        <section id="viewPomodoro" class="view-section">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <h2>Pomodoro Focus Timer</h2>
+              <p>Work with focused intervals to maintain high energy and prevent study fatigue.</p>
+            </div>
+          </div>
+
+          <div class="card pomodoro-container">
+            <!-- Mode Switcher -->
+            <div class="pomodoro-modes">
+              <button type="button" class="pomo-mode-btn active" data-mode="focus" id="pomoBtnFocus">Focus (25m)</button>
+              <button type="button" class="pomo-mode-btn" data-mode="shortBreak" id="pomoBtnShortBreak">Short Break (5m)</button>
+              <button type="button" class="pomo-mode-btn" data-mode="longBreak" id="pomoBtnLongBreak">Long Break (15m)</button>
+            </div>
+
+            <!-- Subject Linker -->
+            <div class="timer-subject-select">
+              <select id="pomoSubjectSelect" class="form-select">
+                <option value="">General Study Session</option>
+              </select>
+            </div>
+
+            <!-- Circular SVG Progress Ring -->
+            <div class="timer-circle-wrap">
+              <svg class="timer-svg" viewBox="0 0 280 280">
+                <circle class="timer-circle-bg" cx="140" cy="140" r="130"></circle>
+                <circle class="timer-circle-progress" id="timerProgressRing" cx="140" cy="140" r="130"></circle>
+              </svg>
+              <div class="timer-display">
+                <div class="timer-digits" id="timerDigits">25:00</div>
+                <div class="timer-phase-label" id="timerPhaseLabel">Focus Session</div>
+              </div>
+            </div>
+
+            <!-- Timer Controls -->
+            <div class="timer-controls">
+              <button type="button" class="btn btn-secondary btn-lg" id="btnTimerReset" title="Reset timer">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                <span>Reset</span>
+              </button>
+
+              <button type="button" class="btn btn-primary btn-lg" id="btnTimerToggle" style="min-width: 140px;">
+                <svg id="timerPlayIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span id="timerToggleText">Start</span>
+              </button>
+            </div>
+
+            <p style="font-size: 0.82rem; color: var(--text-muted);">
+              Completed sessions are automatically logged to your student progress records.
+            </p>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 5: DAILY HABIT TRACKER
+             ================================================================== -->
+        <section id="viewHabits" class="view-section">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <h2>Daily Habit Tracker</h2>
+              <p>Build disciplined study and wellness routines with daily streak tracking.</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="btnOpenAddHabitModal">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>+ Add Habit</span>
+            </button>
+          </div>
+
+          <!-- Habit Cards List -->
+          <div id="habitsListContainer" class="habit-list">
+            <!-- Rendered dynamically -->
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 6: PROGRESS & ANALYTICS
+             ================================================================== -->
+        <section id="viewProgress" class="view-section">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <h2>Progress & Analytics</h2>
+              <p>Real-time analytics calculated directly from your saved study activity.</p>
+            </div>
+          </div>
+
+          <div class="progress-overview-grid">
+            <div class="card">
+              <div class="card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Task Completion Rate
+              </div>
+              <div style="font-size: 2.2rem; font-weight: 700; font-family: 'Outfit'; margin: 12px 0 4px 0;" id="progTasksRate">0%</div>
+              <p style="font-size: 0.82rem; color: var(--text-muted);" id="progTasksSummary">0 of 0 tasks completed</p>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progTasksBar" style="width: 0%;"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
+                Total Study Time
+              </div>
+              <div style="font-size: 2.2rem; font-weight: 700; font-family: 'Outfit'; margin: 12px 0 4px 0;" id="progStudyHours">0.0 hrs</div>
+              <p style="font-size: 0.82rem; color: var(--text-muted);" id="progSessionsSummary">0 focus sessions completed</p>
+            </div>
+
+            <div class="card">
+              <div class="card-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Habit Adherence
+              </div>
+              <div style="font-size: 2.2rem; font-weight: 700; font-family: 'Outfit'; margin: 12px 0 4px 0;" id="progHabitsRate">0%</div>
+              <p style="font-size: 0.82rem; color: var(--text-muted);" id="progHabitsSummary">Weekly habit consistency</p>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progHabitsBar" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: ADD / EDIT REMINDER
+       ======================================================================== -->
+  <div id="modalReminder" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalReminderTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalReminderTitle">Add Deadline / Reminder</h3>
+        <button type="button" class="btn-icon" id="btnCloseReminderModal" aria-label="Close modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="formReminder">
+        <input type="hidden" id="reminderId">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="reminderTitle">Reminder Title *</label>
+            <input type="text" id="reminderTitle" class="form-input" placeholder="e.g. Cloud Computing Lab Assignment 2" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reminderCategory">Category *</label>
+            <!-- Exactly 5 Categories specified: College Fees, Assignments, Examinations, Personal Tasks, Other -->
+            <select id="reminderCategory" class="form-select" required>
+              <option value="Assignments">Assignments</option>
+              <option value="College Fees">College Fees</option>
+              <option value="Examinations">Examinations</option>
+              <option value="Personal Tasks">Personal Tasks</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="reminderDueDate">Due Date *</label>
+              <input type="date" id="reminderDueDate" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="reminderDueTime">Due Time</label>
+              <input type="time" id="reminderDueTime" class="form-input" value="23:59">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reminderPriority">Priority Level *</label>
+            <select id="reminderPriority" class="form-select" required>
+              <option value="Medium">Medium Priority</option>
+              <option value="High">High Priority (Urgent)</option>
+              <option value="Low">Low Priority</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reminderDescription">Description / Notes</label>
+            <textarea id="reminderDescription" class="form-textarea" rows="3" placeholder="Submission guidelines, payment portal link, or key reminders..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelReminder">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btnSaveReminder">Save Reminder</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: ADD / EDIT STUDY TASK
+       ======================================================================== -->
+  <div id="modalTask" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTaskTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTaskTitle">Add Study Task</h3>
+        <button type="button" class="btn-icon" id="btnCloseTaskModal" aria-label="Close modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="formTask">
+        <input type="hidden" id="taskId">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="taskTitle">Task Title *</label>
+            <input type="text" id="taskTitle" class="form-input" placeholder="e.g. Read Chapter 4: Virtual Memory" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="taskSubject">Subject</label>
+            <select id="taskSubject" class="form-select">
+              <option value="">General</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="taskDueDate">Target Date</label>
+              <input type="date" id="taskDueDate" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="taskPriority">Priority</label>
+              <select id="taskPriority" class="form-select">
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelTask">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: ADD SUBJECT
+       ======================================================================== -->
+  <div id="modalSubject" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Subject</h3>
+        <button type="button" class="btn-icon" id="btnCloseSubjectModal" aria-label="Close modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="formSubject">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="subjectName">Subject Name *</label>
+            <input type="text" id="subjectName" class="form-input" placeholder="e.g. Virtualization & Cloud Computing" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="subjectDescription">Description (Optional)</label>
+            <input type="text" id="subjectDescription" class="form-input" placeholder="e.g. Course code: CS504">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelSubject">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Subject</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: ADD / EDIT HABIT
+       ======================================================================== -->
+  <div id="modalHabit" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalHabitTitle">Add New Daily Habit</h3>
+        <button type="button" class="btn-icon" id="btnCloseHabitModal" aria-label="Close modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="formHabit">
+        <input type="hidden" id="habitId">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="habitName">Habit Name *</label>
+            <input type="text" id="habitName" class="form-input" placeholder="e.g. Daily revision (30m)" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="habitDescription">Notes / Motivation</label>
+            <input type="text" id="habitDescription" class="form-input" placeholder="e.g. Review lecture notes before bedtime">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="btnCancelHabit">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Habit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Application Modular JavaScript -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

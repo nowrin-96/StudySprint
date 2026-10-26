@@ -1,0 +1,9 @@
+{
+  "name": "study-sprint",
+  "version": "1.0.0",
+  "description": "Study Sprint — Smart Student Productivity Web Application",
+  "scripts": {
+    "start": "npx live-server --port=3000 --watch=index.html,css,js",
+    "dev": "npx live-server --port=3000 --watch=index.html,css,js"
+  }
+}
